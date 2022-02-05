@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+
+
+{% block content %}
+<h4 class="fw-bold text-center mt-4 mb-3" style="color: hsl(278, 63%, 21%)">★ Post Detail ★</h4>
+<hr>
+<div class="container">
+    <div class="row" style="justify-content: center; align-items: center" style="width: 60%">
+      <div class="col col-4 text-center mt-3 ms-1 me-1">
+        {% if post.image %}
+        <img class="m-2" src="{{post.image.url}}" height="200" width="160">
+        {% else %}
+        <img class="m-2" src="https://picsum.photos/seed/{{post.id}}/160/200?">
+        {% endif %}
+      </div>
+      <div class="col col-4 mt-3 ms-1 me-1">
+        <p class="post-{{post.id}}-title text-center"><a class="fw-bold fw-primary text-center" style="text-decoration: none; color: hsl(278, 63%, 21%)">{{post.title}}</a></p>
+        <hr>
+        <div class="row m-1 mb-3" style="justify-content: space-around">
+          <button id="post-{{post.id}}-like-button" class="col col-2 btn text-center text-white" style="background-color: hsl(278, 63%, 21%)" onclick="onClickLike({{ post.id }})">♡</button>
+          <button class="col col-2 btn btn-danger"><a href="{% url 'pirostagram:post_delete' post.id %}" class="text-white" style="text-decoration: none">삭제</a></button>
+          <button class="col col-2 btn btn-success"><a href="{% url 'pirostagram:post_update' post.id %}" class="text-white" style="text-decoration: none">수정</a></button>
+          <button class="col col-2 btn btn-primary"><a href="{% url 'pirostagram:post_list'%}" class="text-white" style="text-decoration: none">목록</a></button>
+        </div>
+        <p class="post-{{post.id}}-likes">♥ {{post.likes}}명이 이 글을 좋아합니다.</p>
+        <p class="post-{{post.id}}-content">→ {{post.content}}</p>
+      </div>
+    </div>
+
+    <p class="m-4"></p>
+
+    <div class="row" style="justify-content: center!important; align-items: center!important; width: 60%; margin-left: 20%; margin-right: 20%">
+      <div class="post-{{post.id}}-comment">
+        {% for comment in comments %}
+        {% if comment.post == post %}
+          <p class="comment-{{comment.id}}">- {{comment.comment}}
+            <button class="ml-1 btn btn-danger" id="comment-{{comment.id}}-delete" onclick="onClickCommentDelete({{ comment.id }})">삭제</button>
+          </p>
+        {% endif %}
+        {% endfor %}
+      </div>
+      <div style="display: flex; align-items: stretch">
+        <input id="comment-write-{{post.id}}" type="text" class="col-8 mb-3" style="justify-content: center;">
+        <button id="comment-write-button-{{post.id}}" class="col-4 btn text-center text-white mb-3" style="background-color: hsl(278, 63%, 21%)" onclick="onClickCommentWrite({{ post.id }})">등록</button>
+      </div>  
+    </div>
+
+    <script>
+      const requestLike = new XMLHttpRequest();
+
+      const onClickLike = (id) => {
+          const url = "/like_ajax/";
+          requestLike.open("POST", url, true);
+          requestLike.setRequestHeader(
+              "Content-Type",
+              "application/x-www-form-urlencoded"
+          );
+          requestLike.send(JSON.stringify({id: id}));
+      };
+
+      const likeHandleResponse = () => {
+          if (requestLike.status < 400) {
+              const {id, likes} = JSON.parse(requestLike.response);
+              const element = document.querySelector(`.post-${id}-likes`);
+              element.innerHTML = `♥ ${likes}명이 이 글을 좋아합니다.`;
+          }
+      };
+
+      requestLike.onreadystatechange = () => {
+          if (requestLike.readyState === XMLHttpRequest.DONE) {
+              likeHandleResponse();
+          }
+      };
+    </script>
+
+    <script>
+      const requestCommentWrite = new XMLHttpRequest();
+
+      const onClickCommentWrite = (id) => {
+          const url = "/comment_ajax/";
+          requestCommentWrite.open("POST", url, true);
+          requestCommentWrite.setRequestHeader(
+              "Content-Type",
+              "application/x-www-form-urlencoded"
+          );
+          requestCommentWrite.send(JSON.stringify({id: id, comment: document.querySelector(`#comment-write-${id}`).value}));
+      };
+
+      const commentWriteHandleResponse = () => {
+          if (requestCommentWrite.status < 400) {
+              const {post_id, comment_id} = JSON.parse(requestCommentWrite.response);
+              const element = document.querySelector(`.post-${post_id}-comment`);
+              const newComment = document.createElement('p');
+              newComment.className = `comment-${comment_id}`;
+              newComment.innerText = "- " + document.querySelector(`#comment-write-${post_id}`).value + " ";
+              document.querySelector(`#comment-write-${post_id}`).value = '';
+              const newDeleteButton = document.createElement('button');
+              newDeleteButton.className = 'ml-1 btn btn-danger';
+              newDeleteButton.id = `comment-${comment_id}-delete`;
+              newDeleteButton.innerText = "삭제";
+              newDeleteButton.setAttribute("onClick", `onClickCommentDelete(${comment_id})`);
+              element.appendChild(newComment);
+              newComment.appendChild(newDeleteButton);
+          }
+      };
+
+      requestCommentWrite.onreadystatechange = () => {
+          if (requestCommentWrite.readyState === XMLHttpRequest.DONE) {
+              commentWriteHandleResponse();
+          }
+      };
+    </script>
+
+    <script>
+      const requestCommentDelete = new XMLHttpRequest();
+
+      const onClickCommentDelete = (id) => {
+          const url = "/comment_delete_ajax/";
+          requestCommentDelete.open("POST", url, true);
+          requestCommentDelete.setRequestHeader(
+              "Content-Type",
+              "application/x-www-form-urlencoded"
+          );
+          requestCommentDelete.send(JSON.stringify({id: id}));
+      };
+
+      const commentDeleteHandleResponse = () => {
+          if (requestCommentDelete.status < 400) {
+              const {comment_id} = JSON.parse(requestCommentDelete.response);
+              const elementP = document.querySelector(`.comment-${comment_id}`);
+              elementP.remove();
+          }
+      };
+
+      requestCommentDelete.onreadystatechange = () => {
+          if (requestCommentDelete.readyState === XMLHttpRequest.DONE) {
+              commentDeleteHandleResponse();
+          }
+      };
+    </script>
+
+</div>
+{% endblock %}

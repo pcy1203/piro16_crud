@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="form-container">
+    <div class="form">
+      <h4 class="fw-bold text-center mt-4 mb-3" style="color: hsl(278, 63%, 21%)">★ Post Form ★</h4>
+        <hr/>
+        <form method="POST" class="post-form" enctype="multipart/form-data">
+          {% csrf_token %}
+            <div class="container">
+              <p class="row">
+                <label class="mb-1">Title</label> 
+                <input class="form-input" name="title" type="text" maxlength="100" value="{% if post.title %}{{post.title}}{% endif %}">
+              </p>
+              <p class="row">
+                <label class="mb-1">Image</label>
+                <input class="form-input" name="image" type="file" maxlength="255" value="{% if post.image %}{{post.image.url}}{% endif %}">
+              </p>
+              <p class="row">
+                <label class="mb-1">Content</label> 
+                <textarea class="content-input" name="content">{% if post.content %}{{post.content}}{% endif %}</textarea>
+              </p>
+              <div class="row" style="justify-content: center">
+                <button type="submit" class="save btn col col-2 text-center text-white mb-3" style="background-color: hsl(278, 63%, 21%)">Save</button>
+              </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
