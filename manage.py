@@ -20,3 +20,8 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+
+class MergeTest:
+    a = 6
+    print(a)
